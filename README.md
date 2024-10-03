@@ -12,6 +12,7 @@ DEERFold is described in this [preprint](); if you use the code from this reposi
 <p align="center">
   <img src="img/LmrP.gif" width="250" alt="LmrP">
   <img src="img/PfMATE.gif" width="200" alt="PfMATE">
+  <img src="img/pgp.gif" width="200" alt="Pgp">
 </p>
 
 ## Table of contents
