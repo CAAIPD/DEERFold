@@ -9,16 +9,10 @@ DEERFold is described in this [preprint](); if you use the code from this reposi
 <img src="img/Fig1.png" width="1200" alt="Workflow of DEERFold">
 </p>
 
-<table style="border-collapse: collapse; border: none;">
-  <tr>
-    <td style="border: none; padding: 0;">
-      <img src="img/LmrP.gif" width="350" alt="LmrP" style="display: block;">
-    </td>
-    <td style="border: none; padding: 0;">
-      <img src="img/PfMATE.gif" width="350" alt="PfMATE" style="display: block;">
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="img/LmrP.gif" width="250" alt="LmrP">
+  <img src="img/PfMATE.gif" width="250" alt="PfMATE">
+</p>
 
 ## Table of contents
 
