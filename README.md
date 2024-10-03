@@ -9,17 +9,12 @@ DEERFold is described in this [preprint](); if you use the code from this reposi
 <img src="img/Fig1.png" width="1200" alt="Workflow of DEERFold">
 </p>
 
-<p>
-  <div style="display: flex; justify-content: center; gap: 20px;">
-      <div>
-          <img src="img/LmrP.gif" width="350" height="300" alt="LmrP" style="display: block;">
-      </div>
-      <div>
-          <img src="img/PfMATE.gif" width="350" height="300" alt="PfMATE" style="display: block;">
-      </div>
-  </div>
-</p>
-----
+<table>
+  <tr>
+    <td width="50%"><img src="img/LmrP.gif" width="100%" alt="LmrP"></td>
+    <td width="50%"><img src="img/PfMATE.gif" width="100%" alt="PfMATE"></td>
+  </tr>
+</table>
 
 ## Table of contents
 
