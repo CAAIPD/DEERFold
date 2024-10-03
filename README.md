@@ -5,13 +5,13 @@ In this work, we introduce DEERFold, a modified AlphaFold2 framework that incorp
 
 DEERFold is described in this [preprint](); if you use the code from this repository or the results, please cite the preprint.
 
-<table>
+<table style="border-collapse: collapse; border: none;">
   <tr>
-    <td width="50%" align="center">
-      <img src="img/LmrP.gif" width="350" alt="LmrP">
+    <td style="border: none; padding: 0;">
+      <img src="img/LmrP.gif" width="350" alt="LmrP" style="display: block;">
     </td>
-    <td width="50%" align="center">
-      <img src="img/PfMATE.gif" width="350" alt="PfMATE">
+    <td style="border: none; padding: 0;">
+      <img src="img/PfMATE.gif" width="350" alt="PfMATE" style="display: block;">
     </td>
   </tr>
 </table>
@@ -46,7 +46,7 @@ pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --e
 We provide a notebook with installation guidance that can be found in [examples/deerfold.ipynb](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb). It also includes examples on how to generate predictions using our models. We recommend following this notebook if you would like to use our models to generate proteins.
 
 **Available DEERFold models are:**
-* ``` DEERFold_helix.pt: DEERFold model trained on exposed sites in helical regions```
+* ``` DEERFold_helix.pt: DEERFold model trained on exposed sites in helical regions ```
 * ``` DEERFold_strand.pt: DEERFold model trained on exposed sites in beta strand regions ```
 * ``` DEERFold_com.pt: DEERFold model trained on exposed sites in both helical and beta strand regions  ```
 
