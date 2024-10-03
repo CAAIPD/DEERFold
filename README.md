@@ -5,14 +5,14 @@ In this work, we introduce DEERFold, a modified AlphaFold2 framework that incorp
 
 DEERFold is described in this [preprint](); if you use the code from this repository or the results, please cite the preprint.
 
-<p align="center">
-<img src="img/Fig1.png" width="1200" alt="Workflow of DEERFold">
-</p>
-
 <table>
   <tr>
-    <td width="50%"><img src="img/LmrP.gif" width="100%" alt="LmrP"></td>
-    <td width="50%"><img src="img/PfMATE.gif" width="100%" alt="PfMATE"></td>
+    <td width="50%" align="center">
+      <img src="img/LmrP.gif" width="350" alt="LmrP">
+    </td>
+    <td width="50%" align="center">
+      <img src="img/PfMATE.gif" width="350" alt="PfMATE">
+    </td>
   </tr>
 </table>
 
