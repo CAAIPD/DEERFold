@@ -345,7 +345,7 @@ def main(args):
         logger.info(
             f"Subsampling MSA to Neff={args.neff}..."
         )
-        indices = subsample_msa_sequentially(msa, neff=args.neff, eff_cutoff=0.5, cap_msa=False)
+        indices = subsample_msa_sequentially(msa, neff=args.neff, eff_cutoff=0.62, cap_msa=False)
         feature_dict['msa'] = msa[indices]
         feature_dict['deletion_matrix_int'] = feature_dict['deletion_matrix_int'][indices]
     print(feature_dict['msa'].shape, feature_dict['deletion_matrix_int'].shape)
