@@ -33,19 +33,6 @@ DEERFold is described in this [preprint](); if you use the code from this reposi
 ----
 
 ## Installation
-To download our code, we recommend creating the conda environment with deerfold_environment.yml.
-```
-conda env create -f deerfold_environment.yml
-```
-To run DEERFold, you need to install the following tools: 
-* [PyTorch v1.12](https://pytorch.org/get-started/previous-versions/)
-```
-pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
-```
-* [Openfold 1.0.1](https://github.com/aqlaboratory/openfold/releases) As DEERfold is built on OpenFold, please refer to the [OpenFold GitHub](https://github.com/aqlaboratory/openfold#installation-linux) for installation instructions.  
-* [chiLife 1.0.0.dev3](https://github.com/stollLab/chiLife/)
-* [TM-score](https://zhanggroup.org/TM-score/)
-
 We provide a notebook with installation guidance that can be found in [examples/deerfold.ipynb](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb). It also includes examples on how to generate predictions using our models. We recommend following this notebook if you would like to use our models to generate proteins.
 
 ### **Available DEERFold models**
@@ -56,6 +43,29 @@ We provide a notebook with installation guidance that can be found in [examples/
 Model weights can be downloaded [here]().
 
 ## Inference
+### Unconstrained prediction
+
+For comparison DEERFold can accept empty csv file to genreate unconstrained models. 
+
+To unconditionally generate models from DEERFold, run the following script:
+
+``` 
+python deerfold_inference.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --neff neff --num num
+
+E.g. Generate 15 unconstrained DEERFold models, set MSA Neff as 5
+python deerfold_inference.py examples/PfMATE.fasta examples/alignments out/PfMATE --model 'models/updated_DEERFold_helix.pt,models/updated_DEERFold_strand.pt,models/updated_DEERFold_com.pt' --neff 5 --num 15
+```
+Options are as follows:
+- `fasta_file`: Input sequence file in FASTA format.
+- `msa_dir`: Directory containing multiple sequence alignments.
+- `out_dir`: Directory to save output models.
+- `model`: Directory storing all the model weights.
+- `neff`: MSA Neff value.
+- `num`: Number of models to generate.
+
+An example of unconstrained model generation from DEERFold can be found in
+[this notebook](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb).
+
 ### Constrained prediction
 DEERFold can accept input DEER distance constraints in csv format, the format is shown as below:
 ```
@@ -67,43 +77,30 @@ The input distance constraints are in the format of distograms (shape LxLx100, e
 
 To run inference on a sequence with the given DEER constraints, run the following script:
 ```
-python predict_with_sp_batch.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --sp <csv_file> --neff neff --num num --refs <ref1.pdb,ref2.pdb>
+python deerfold_inference.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --splabel <csv_file> --neff neff --num num --ref_pdbs <ref1.pdb,ref2.pdb>
 
 Options are:
---model   The directory which stores all the model weights .
---sp      Input file in csv format.
---neff    MSA neff value.
---num     number of models generated
---refs    reference model used for TMscore or RMSD analysis
+- `fasta`: Input sequence file in FASTA format.
+- `splabel`: Input file with DEER constraints in CSV format.
+- `msa_dir`: Directory containing multiple sequence alignments.
+- `out_dir`: Directory to save output models.
+- `models`: Directory storing all the model weights.
+- `neff`: MSA Neff value.
+- `num_models`: Number of models to generate.
+- `ref_pdbs`: Reference PDB files for RMSD and TM-score analysis (optional).
 ```
-* E.g. Generate 100 constrained models from DEERFold_helix based on the input DEER constraints(**--sp** examples/PfMATE/PfMATE_low.csv), set MSA Neff as 5
+* E.g. Generate 100 constrained models from DEERFold_helix based on the input DEER constraints(**--splabel** examples/PfMATE/PfMATE_low.csv), set MSA Neff as 5
 ```
-python predict_with_sp_batch.py examples//PfMATE/PfMATE.fasta examples/alignments out/PfMATE --model model --sp examples/PfMATE/PfMATE_low.csv --neff 5 --num 100
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/alignments out/PfMATE --model model --splabel examples/PfMATE/PfMATE_low.csv --neff 5 --num 100
 ```
-* E.g. If you have the reference models available, DEERFold provides RMSD and TM-score analysis of the prediction results compared to the reference PDB files(**--ref**).
+* E.g. If you have the reference models available, DEERFold provides RMSD and TM-score analysis of the prediction results compared to the reference PDB files(**--ref_pdbs**).
 ```
-python predict_with_sp_batch.py examples//PfMATE/PfMATE.fasta examples/alignments out/PfMATE --model model --sp examples/PfMATE/PfMATE_low.csv --neff 5 --num 100 --refs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/alignments out/PfMATE --model model --splabel examples/PfMATE/PfMATE_low.csv --neff 5 --num 100 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
 ```
 
 Outputs should be DEERFold predicted models in the format of PDB files, which are ranked by EMD distance between the prediction and the input distance constraints. **The top ranking models should be those most closely fitting the input distance constraints.**
 
 An example of constrained model generation from DEERFold can be found in
-[this notebook](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb).
-
-### Unconstrained prediction
-
-For comparison DEERFold can accept empty csv file to genreate unconstrained models. 
-
-To unconditionally generate models from DEERFold, run the following script:
-
-``` 
-python predict_with_sp_batch.py <fasta_file> <msa_dir> <out_dir> --model <strand/helix/com> --neff neff --num num
-
-E.g. Generate 100 unconstrained models from DEERFold_helix, set MSA Neff as 5
-python predict_with_sp_batch.py examples/PfMATE.fasta examples/alignments out --model strand --neff 5 --num 100
-```
-
-An example of unconstrained model generation from DEERFold can be found in
 [this notebook](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb).
 
 ## Training
