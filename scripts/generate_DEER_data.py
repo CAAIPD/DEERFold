@@ -20,43 +20,41 @@ def model_to_mdanalysis(filename):
     mdaload = mda.Universe(filename, format="PDB")
     return mdaload
 
-def parse_dssp_file(mmcif_file, filename, chain_id):
+def parse_dssp_file(mmcif_file, filename, chain_id, out_dir):
     m = MMCIFParser()
     structure = m.get_structure("protein", mmcif_file)
-
-    target_model = None
+    new_structure = structure.__class__(structure.id)
     found = False
+    
     for model in structure:
         if found:
             break
         if chain_id in [chain.id for chain in model]:
             new_model = Model.Model(0)
-
             for chain in model:
                 if chain.id == chain_id:
-                    if chain_id != 'A':
-                        chains_to_remove = [chain for chain in model if chain.id == 'A']
+                    if chain_id != 'X':
+                        chains_to_remove = [chain for chain in model if chain.id == 'X']
                         if chains_to_remove:
-                            model.detach_child('A')
-                    print(chain.id)
-                    chain.id = 'A'
-                    chain_id = 'A'
+                            model.detach_child('X')
+                    # print(chain.id)
+                    chain.id = 'X'
+                    chain_id = 'X'
                     new_model.add(chain)
-                    target_model = new_model
+                    new_structure.add(new_model)
                     found = True
                     break
     
-    if target_model is None:
+    if len(new_structure) == 0:
         raise ValueError(f"Chain {chain_id} not found in any model of the structure.")
 
-    # Save the new model as a PDB file
+    # Save the new structure as a PDB file
     io = PDBIO()
-    new_structure = structure.__class__(structure.id)
-    new_structure.add(target_model)
-    output_pdb_file = f'{filename}_{chain_id}.pdb'
+    output_pdb_file = f'{out_dir}/{filename}_{chain_id}.pdb'
     io.set_structure(new_structure)
     io.save(output_pdb_file)
-
+    
+    target_model = new_structure[0]
     dssp = DSSP(target_model, output_pdb_file, dssp='mkdssp')
     
     secondary_structure = ''
@@ -72,7 +70,7 @@ def parse_dssp_file(mmcif_file, filename, chain_id):
             seq += dssp[key][1]
             full_res.append(res_num)
             ss = dssp[key][2]
-            print(key, dssp[key])
+            # print(key, dssp[key])
             # Avoid acc 'NA' or residue number not in pdb
             if not isinstance(dssp[key][3], float) or ((' ', res_num, ' ') not in target_model[chain_id]):
                 continue
@@ -135,13 +133,18 @@ def select_two_residues(exposed_residues):
 def calculate_distance(coord1, coord2):
     return math.sqrt(sum((a - b) ** 2 for a, b in zip(coord1, coord2)))
 
-def calculate_segment_distances(elements, coordinates):
+def calculate_segment_distances(elements, coordinates, helix_cufoff = 5, strand_cutoff = 5):
     distances = defaultdict(list)
     pairs = []
     for ss_type in ['H', 'E']:
         same_type_elements = [e for e in elements if e[0] == ss_type]
+        if ss_type == 'H':
+            thre = helix_cufoff
+        if ss_type == 'E':
+            thre = strand_cutoff
+
         for (e1, e2) in combinations(same_type_elements, 2):
-            if (e1[2] - e1[1] + 1 < 5) or (e2[2] - e2[1] + 1 < 5):
+            if (e1[2] - e1[1] + 1 < thre) or (e2[2] - e2[1] + 1 < thre):
                 continue
             e_index = {1:e1[1], 2:e1[2], 3:e2[1], 4:e2[2]}
             min_pair = find_min_angle_pair(np.array(coordinates[e1[1]]), np.array(coordinates[e1[2]]), np.array(coordinates[e2[1]]), np.array(coordinates[e2[2]]))
@@ -153,15 +156,15 @@ def calculate_segment_distances(elements, coordinates):
             distances[f"{ss_type}: {e1[1]}-{e1[2]}"].append(f"{e2[1]}-{e2[2]}: {result[0]}-{result[1]}: {distance1:.2f}, {result[2]}-{result[3]}: {distance2:.2f}")
     return distances, pairs
 
-def analyze_dssp_file(mmcif_file, chain_id):
+def analyze_dssp_file(mmcif_file, chain_id, helix_cufoff, strand_cutoff, out_dir):
     filename = os.path.splitext(os.path.basename(mmcif_file))[0]
-    target_model, seq, full_res, secondary_structure, residue_numbers, accessibility, coordinates = parse_dssp_file(mmcif_file, filename, chain_id)
-    print(seq, full_res)
+    target_model, seq, full_res, secondary_structure, residue_numbers, accessibility, coordinates = parse_dssp_file(mmcif_file, filename, chain_id, out_dir)
+    # print(seq, full_res)
     seq_res = {
     "seq": seq,
     "res_num": full_res,
     }
-    with open(f"{filename}_{chain_id}.json", 'w') as fp:
+    with open(f"{out_dir}/{filename}_{chain_id}.json", 'w') as fp:
         json.dump(seq_res, fp)
 
     elements = find_secondary_structure_elements(secondary_structure, residue_numbers, accessibility)
@@ -173,7 +176,7 @@ def analyze_dssp_file(mmcif_file, chain_id):
             elements[i] = (ss_type, start, end, acc, exposed_residues)
             # print(f"{ss_type}: {start}-{end}, Direction: {direction}, Exposed residues: {exposure}")
 
-    distances, pairs = calculate_segment_distances(elements, coordinates)
+    distances, pairs = calculate_segment_distances(elements, coordinates, int(helix_cufoff), int(strand_cutoff))
     # print("\nSegment Distances:")
     # for segments, distance in distances.items():
     #     print(f"{segments}: {distance}")
@@ -181,8 +184,8 @@ def analyze_dssp_file(mmcif_file, chain_id):
     mdaload = model_to_mdanalysis(target_model)
     data_list = []
     r = np.linspace(1, 100, 100)
-    if target_model != filename+"_"+chain_id+".pdb":
-        new_chain_id = 'A'
+    if target_model != out_dir+"/"+filename+"_"+chain_id+".pdb":
+        new_chain_id = 'X'
     else:
         new_chain_id = chain_id
 
@@ -200,23 +203,26 @@ def analyze_dssp_file(mmcif_file, chain_id):
         if maxValue > 15 and maxValue < 100:
             data_list.append([i, j] + P.tolist())
     output_df = pd.DataFrame(data_list)
-    output_df.to_csv(f"{filename}_{chain_id}.csv", index=None, header=False)
-    os.system(f"mv {filename}_A.pdb {filename}_{chain_id}.pdb")
+    output_df.to_csv(f"{out_dir}/{filename}_{chain_id}.csv", index=None, header=False)
+    if target_model != out_dir+"/"+filename+"_"+chain_id+".pdb":
+        os.system(f"mv {out_dir}/{filename}_X.pdb {out_dir}/{filename}_{chain_id}.pdb")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python dssp_secondary_structure_analyzer.py <mmcif_file_path> <chain_id>")
+    if len(sys.argv) != 6:
+        print("Usage: python generate_DEER_data.py <mmcif_file_path> <chain_id> <helix_cufoff> <strand_cutoff> <out_dir>")
         sys.exit(1)
     
     mmcif_file_path = sys.argv[1]
     chain_id = sys.argv[2]
-    
-    analyze_dssp_file(mmcif_file_path, chain_id)
-    # try:
-    #     analyze_dssp_file(mmcif_file_path, chain_id)
-    # except FileNotFoundError:
-    #     print(f"Error: File '{mmcif_file_path}' not found.")
-    #     sys.exit(1)
-    # except Exception as e:
-    #     print(f"An error occurred: {e}")
-    #     sys.exit(1)
+    helix_cufoff = sys.argv[3]
+    strand_cutoff = sys.argv[4]
+    out_dir = sys.argv[5]
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    try:
+        analyze_dssp_file(mmcif_file_path, chain_id, helix_cufoff, strand_cutoff, out_dir)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        sys.exit(1)
