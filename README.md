@@ -119,11 +119,12 @@ DEER data used for training can be downloaded [here](). Or you can generate the 
 
 **Step 1** Generate the simulated DEER data in csv file from the protein structure in the format of mmCIF file.
 
-`Install DSSP first`: 
+<mark>Install DSSP first:</mark> 
 ```
 conda install -c salilab dssp
 conda install libboost==1.73.0
-
+```
+```
 python scripts/generate_DEER_data.py <mmcif_file> <chain_id> <helix_cufoff> <strand_cutoff> <out_dir>
 
 E.g.
