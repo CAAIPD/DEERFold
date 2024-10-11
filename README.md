@@ -53,7 +53,7 @@ To unconditionally generate models from DEERFold, run the following script:
 python deerfold_inference.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --neff neff --num num
 
 E.g. Generate 15 unconstrained DEERFold models, set MSA Neff as 5
-python deerfold_inference.py examples/PfMATE.fasta examples/alignments out/PfMATE --model 'models/updated_DEERFold_helix.pt,models/updated_DEERFold_strand.pt,models/updated_DEERFold_com.pt' --neff 5 --num 15
+python deerfold_inference.py examples/PfMATE_A.fasta examples/alignments out/PfMATE --model 'models/DEERFold_helix.pt,models/DEERFold_strand.pt,models/DEERFold_com.pt' --neff 5 --num 15
 ```
 Options are as follows:
 - `fasta_file`: Input sequence file in FASTA format.
@@ -89,13 +89,13 @@ Options are:
 - `num_models`: Number of models to generate.
 - `ref_pdbs`: Reference PDB files for RMSD and TM-score analysis (optional).
 ```
-* E.g. Generate 100 constrained models from DEERFold_helix based on the input DEER constraints(**--splabel** examples/PfMATE/PfMATE_low.csv), set MSA Neff as 5
+* E.g. Generate 15 constrained models from DEERFold_helix based on the input DEER constraints(**--splabel** examples/PfMATE/PfMATE_low.csv), set MSA Neff as 5
 ```
-python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/alignments out/PfMATE --model model --splabel examples/PfMATE/PfMATE_low.csv --neff 5 --num 100
+python deerfold_inference.py examples/PfMATE/PfMATE_A.fasta examples/alignments out/PfMATE --splabel examples/PfMATE/PfMATE_low.csv --neff 5 --num 15
 ```
 * E.g. If you have the reference models available, DEERFold provides RMSD and TM-score analysis of the prediction results compared to the reference PDB files(**--ref_pdbs**).
 ```
-python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/alignments out/PfMATE --model model --splabel examples/PfMATE/PfMATE_low.csv --neff 5 --num 100 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
+python deerfold_inference.py examples/PfMATE/PfMATE_A.fasta examples/alignments out/PfMATE --splabel examples/PfMATE/PfMATE_low.csv --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
 ```
 
 Outputs should be DEERFold predicted models in the format of PDB files, which are ranked by EMD distance between the prediction and the input distance constraints. **The top ranking models should be those most closely fitting the input distance constraints.**
@@ -118,13 +118,28 @@ The filenames for train and validation DEERFold splits are saved in `data/train.
 DEER data used for training can be downloaded [here](). Or you can generate the simulation data in csv file by chiLife for the protein structure in the format of mmCIF file, which the labeling sites are selected by the method [Kazmier et al.](https://www.sciencedirect.com/science/article/abs/pii/S1047847710003400?via%3Dihub). 
 
 **Step 1** Generate the simulated DEER data in csv file from the protein structure in the format of mmCIF file.
+
+`Install DSSP first`: 
 ```
-python scripts/generate_DEER_data.py <mmcif_file> <chain_id> <out_dir>
+conda install -c salilab dssp
+conda install libboost==1.73.0
+
+python scripts/generate_DEER_data.py <mmcif_file> <chain_id> <helix_cufoff> <strand_cutoff> <out_dir>
+
+E.g.
+python scripts/generate_DEER_data.py examples/PfMATE/6fhz.cif A 20 5 out/
+
+Outputs: 6fhz_A.csv  6fhz_A.json  6fhz_A.pdb
+6fhz_A.csv: Output simulated DEER data in csv format.
+6fhz_A.json: Mapping of residue names to their indexes in the selected chain.
+6fhz_A.pdb: The selected chain structure in pdb format.
 ```
-**Step 2** From Step 1, you 'll get the simulated DEER data in csv file and a json file with sequence of corresponding `mmcif_file`. If your input sequence in fasta file doesn't align with the squence in `mmcif_file`, you can use the following script to generate the mapping file and output the reindexed csv file.
-```
-python scripts/fasta_align.py <json_file> <fasta_file> <out_dir>
-```
+Options are:
+- `mmcif_file`: Input structure file in cif format.
+- `chain_id`: Chain id.
+- `helix_cutoff`: Selecting labeling sites for helix segments >= cutoff (default : 20).
+- `strand_cutoff`: Selecting labeling sites for beta strand segments >= cutoff (default : 5).
+- `out_dir`: Directory to save outputs.
 
 ### Loading Pretrained Alphafold2 Models
 The model was fine-tuned using AlphaFold2's pretrained model weights without using templates ([model_5_ptm](https://storage.googleapis.com/alphafold/alphafold_params_2022-01-19.tar)), which was previously released versions of AlphaFold and AlphaFold-Multimer were trained using PDB structures with a release date before 2018-04-30, a cutoff date chosen to coincide with the start of the 2018 CASP13 assessment. 
