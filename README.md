@@ -28,7 +28,6 @@ DEERFold is described in this [preprint](); if you use the code from this reposi
   - [Protein Structure Dataset](#protein-structure-dataset) 
   - [DEERFold Training Data](#deerfold-training-data) 
   - [DEER Data Generation](#deer-data-generation) 
-- [Analysis](#analysis-of-generations)
 
 ----
 
