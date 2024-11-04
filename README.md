@@ -35,9 +35,7 @@ DEERFold is described in this [preprint](https://doi.org/10.1101/2024.10.30.6211
 We provide a notebook with installation guidance that can be found in [examples/deerfold.ipynb](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb). It also includes examples on how to generate predictions using our models. We recommend following this notebook if you would like to use our models to generate proteins.
 
 ### **Available DEERFold models**
-* ``` DEERFold_helix.pt: DEERFold model trained on exposed sites in helical regions ```
-* ``` DEERFold_strand.pt: DEERFold model trained on exposed sites in beta strand regions ```
-* ``` DEERFold_com.pt: DEERFold model trained on exposed sites in both helical and beta strand regions  ```
+* ``` DEERFold.pt: DEERFold model trained on exposed sites in both helical and beta strand regions  ```
 
 Model weights can be downloaded [here]().
 
@@ -114,7 +112,7 @@ The correspond protein strucures are extracted from [OpenFold dataset](https://r
 The filenames for train and validation DEERFold splits are saved in `data/train.json` and `data/val.json`
 
 ### DEER Data Generation
-DEER data used for training can be downloaded [here](). Or you can generate the simulation data in csv file by chiLife for the protein structure in the format of mmCIF file, which the labeling sites are selected by the method [Kazmier et al.](https://www.sciencedirect.com/science/article/abs/pii/S1047847710003400?via%3Dihub). 
+DEER data used for training can be downloaded [here](https://zenodo.org/records/14032036). Or you can generate the simulation data in csv file by chiLife for the protein structure in the format of mmCIF file, which the labeling sites are selected by the method [Kazmier et al.](https://www.sciencedirect.com/science/article/abs/pii/S1047847710003400?via%3Dihub). 
 
 **Step 1** Generate the simulated DEER data in csv file from the protein structure in the format of mmCIF file.
 
