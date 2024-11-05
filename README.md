@@ -32,12 +32,12 @@ DEERFold is described in this [preprint](https://doi.org/10.1101/2024.10.30.6211
 ----
 
 ## Installation
-We provide a notebook with installation guidance that can be found in [examples/deerfold.ipynb](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb). It also includes examples on how to generate predictions using our models. We recommend following this notebook if you would like to use our models to generate proteins.
+We provide a notebook with installation guidance that can be found in <mark>[examples/deerfold.ipynb](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb)</mark>. It also includes examples on how to generate predictions using our models. We recommend following this notebook if you would like to use our models to generate proteins.
 
 ### **Available DEERFold models**
 * ``` DEERFold.pt: DEERFold model trained on exposed sites in both helical and beta strand regions  ```
 
-Model weights can be downloaded [here]().
+Model weights can be downloaded [here](https://zenodo.org/records/14032036).
 
 ## Inference
 ### Unconstrained prediction
@@ -50,7 +50,7 @@ To unconditionally generate models from DEERFold, run the following script:
 python deerfold_inference.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --neff neff --num num
 
 E.g. Generate 15 unconstrained DEERFold models, set MSA Neff as 5
-python deerfold_inference.py examples/PfMATE_A.fasta examples/alignments out/PfMATE --model 'models/DEERFold_helix.pt,models/DEERFold_strand.pt,models/DEERFold_com.pt' --neff 5 --num 15
+python deerfold_inference.py examples/PfMATE_A.fasta examples/alignments out/PfMATE --model model/DEERFold.pt --neff 5 --num 15
 ```
 Options are as follows:
 - `fasta_file`: Input sequence file in FASTA format.
@@ -149,3 +149,16 @@ The training procedure mainly follows the Openfold training procedure. For more 
 python train_openfold.py <train_mmcif_dir> <train_alignment_dir>  <out_dir> --val_data_dir <val_mmcif_dir> --val_alignment_dir <val_alignment_dir> --checkpoint_best_val=True  --precision bf16 --gpus 4 --replace_sampler_ddp=True --seed 4242022 --obsolete_pdbs_file_path obsolete.dat  --train_mapping_path data/train.json --deepspeed_config_path deepspeed_config.json --wandb --wandb_project deerfold
 ```
 
+### Citation
+```
+@article {Wu2024.10.30.621127,
+	author = {Wu, Tianqi and Stein, Richard A. and Kao, Te-Yu and Brown, Benjamin and Mchaourab, Hassane S.},
+	title = {Modeling Protein Conformations by Guiding AlphaFold2 with Distance Distributions. Application to Double Electron Electron Resonance (DEER) Spectroscopy},
+	elocation-id = {2024.10.30.621127},
+	year = {2024},
+	doi = {10.1101/2024.10.30.621127},
+	publisher = {Cold Spring Harbor Laboratory},
+	eprint = {https://www.biorxiv.org/content/early/2024/11/01/2024.10.30.621127.full.pdf},
+	journal = {bioRxiv}
+}
+```
