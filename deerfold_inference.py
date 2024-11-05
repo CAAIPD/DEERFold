@@ -103,6 +103,7 @@ def main(args):
                     output_dir=f"{args.outdir}/{pdbid}",
                     checkpoint_path=model_file,
                     neff=args.neff,
+                    # neff=None,
                     distograms=True,
                     model_device=args.model_device,
                     features=args.features,
@@ -173,12 +174,16 @@ if __name__ == "__main__":
         help="Path to FASTA file, one sequence per file"
     )
     parser.add_argument(
-        "--splabel", type=str,
-        help="Path to the spin label CSV file"
+        "msa_dir", type=str,
+        help="Directory containing precomputed MSA"
     )
     parser.add_argument(
-        "--msa_dir", type=str, required=True,
-        help="Directory containing precomputed MSA"
+        "outdir", type=str,
+        help="Output directory for results"
+    )
+    parser.add_argument(
+        "--splabel", type=str,
+        help="Path to the spin label CSV file"
     )
     parser.add_argument(
         "--neff", type=float, default=5.0,
@@ -204,10 +209,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--ref_pdbs", type=str,
         help="Comma-separated list of reference PDB files"
-    )
-    parser.add_argument(
-        "--outdir", type=str, required=True,
-        help="Output directory for results"
     )
     parser.add_argument(
         "--num_models", type=int, default=15,

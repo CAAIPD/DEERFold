@@ -312,7 +312,7 @@ def run_deerfold(**kwargs):
 
     logger.info(f"Output written to {unrelaxed_output_path}...")
 
-    if not config.skip_relaxation:        
+    if not config.skip_relaxation:    
         amber_relaxer = relax.AmberRelaxation(
             **config.relax
         )
