@@ -551,17 +551,18 @@ class DataPipeline:
         mmcif_feats = make_mmcif_features(mmcif, chain_id)
 
         input_sequence = mmcif.chain_to_seqres[chain_id]
-        hits = self._parse_template_hits(alignment_dir)
-        template_features = make_template_features(
-            input_sequence,
-            hits,
-            self.template_featurizer,
-            query_release_date=to_date(mmcif.header["release_date"])
-        )
+        # hits = self._parse_template_hits(alignment_dir)
+        # template_features = make_template_features(
+        #     input_sequence,
+        #     hits,
+        #     self.template_featurizer,
+        #     query_release_date=to_date(mmcif.header["release_date"])
+        # )
         
         msa_features = self._process_msa_feats(alignment_dir, input_sequence)
 
-        return {**mmcif_feats, **template_features, **msa_features}
+        # return {**mmcif_feats, **template_features, **msa_features}
+        return {**mmcif_feats,  **msa_features}
 
     def process_pdb(
         self,

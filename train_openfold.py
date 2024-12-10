@@ -52,6 +52,16 @@ from openfold.utils.import_weights import (
 
 from openfold.utils.logger import PerformanceLoggingCallback
 
+def filter_batch(batch):
+    keys_to_keep = [
+        'aatype', 'residue_index', 'seq_length', 'sp', 'seq_mask', 'msa_mask',
+        'msa_row_mask', 'atom14_atom_exists', 'residx_atom14_to_atom37',
+        'residx_atom37_to_atom14', 'atom37_atom_exists', 'extra_msa',
+        'extra_msa_mask', 'extra_msa_row_mask', 'bert_mask', 'true_msa',
+        'extra_has_deletion', 'extra_deletion_value', 'msa_feat', 'target_feat', 'all_atom_positions', 'all_atom_mask'
+    ]
+    
+    return {key: value for key, value in batch.items() if key in keys_to_keep}
 
 class OpenFoldWrapper(pl.LightningModule):
     def __init__(self, config, model):
@@ -127,29 +137,43 @@ class OpenFoldWrapper(pl.LightningModule):
             self.cached_weights = self.model.state_dict()
             self.model.load_state_dict(self.ema.state_dict()["params"])
         
-        self.model.config.template.enabled = self.model.config.template.enabled and any([
-                "template_" in k for k in batch
-            ])
+        # Calculate validation loss
+        batch = filter_batch(batch)
 
-        with torch.no_grad(): 
-            outputs = self.model(batch)
-            # print(batch.keys(), f"Batch {batch_idx} peak memory: {torch.cuda.max_memory_allocated() / 1e9:.2f} GB")
-            batch = tensor_tree_map(lambda t: t[..., -1], batch)
+        try:
+                outputs = self.model(batch)
+                batch = tensor_tree_map(lambda t: t[..., -1], batch)
+                metrics = self._compute_validation_metrics(
+                    batch, 
+                    outputs,
+                    superimposition_metrics=True
+                )
+                for k, v in metrics.items():
+                    # print(f"val/{k}", v)
+                    self.log(f"val/{k}", v)
+
+                # loss = lddt_ca(
+                #     outputs["final_atom_positions"],
+                #     batch["all_atom_positions"],
+                #     batch["all_atom_mask"],
+                #     eps=self.config.globals.eps,
+                #     per_residue=False,
+                # )
+
+                self.log("val_loss", metrics['gdt_ts'], prog_bar=True)
+                del outputs, batch
+                torch.cuda.empty_cache()
+                gc.collect()
+                return {"val_loss": metrics['gdt_ts']}
             
-            loss = lddt_ca(
-                        outputs["final_atom_positions"],
-                        batch["all_atom_positions"],
-                        batch["all_atom_mask"],
-                        eps=self.config.globals.eps,
-                        per_residue=False,
-                    )
-
-            self.log("val_loss", loss, prog_bar=True)
-
-            del outputs, batch
-            torch.cuda.empty_cache()
-            gc.collect()
-        return {"val_loss": loss}
+        except torch.cuda.OutOfMemoryError:
+            print(f"OOM error occurred for batch {batch_idx}. Skipping this step.")
+            torch.cuda.empty_cache() 
+            return {"val_loss": None}
+        
+        except Exception as e:
+            print(f"An error occurred for batch {batch_idx}: {str(e)}. Skipping this step.")
+            return {"val_loss": None} 
 
     def validation_epoch_end(self, _):
         # Restore the model weights to normal
@@ -242,7 +266,7 @@ def main(args):
 
     model = AlphaFold(config)   
     
-    import_jax_weights_(model, "/home/wut18/AlphaLink/openfold/resources/params/params_model_5_ptm.npz", version="model_5_ptm")
+    import_jax_weights_(model, "/data/mchaourab/wut18/release/DEERFold/openfold/resources/params/params_model_5_ptm.npz", version="model_5_ptm")
 
     model_module = OpenFoldWrapper(config, model)
 
@@ -271,7 +295,7 @@ def main(args):
     callbacks = []
     mc = ModelCheckpoint(
         dirpath=os.path.join(args.output_dir, "checkpoints"),
-        filename="deerfold_low_neff_CA_ptm_{epoch}_{val_loss:.4f}",
+        filename="deerfold_{epoch}_{val_loss:.4f}",
         every_n_epochs=1,
         save_top_k=-1,
     )
@@ -373,14 +397,6 @@ if __name__ == "__main__":
         help="Directory containing training mmCIF files"
     )
     parser.add_argument(
-        "train_feats_dir", type=str,
-        help="Directory containing training feature files in pkl"
-    )
-    parser.add_argument(
-        "train_DEER_dir", type=str,
-        help="Directory containing training DEER data in csv"
-    )
-    parser.add_argument(
         "train_alignment_dir", type=str,
         help="Directory containing precomputed training alignments"
     )
@@ -394,9 +410,17 @@ if __name__ == "__main__":
                 if not on rank 0'''
     )
     parser.add_argument(
-        "max_template_date", type=str,
+        "--max_template_date", type=str,  default="2021-10-10",
         help='''Cutoff for all templates. In training mode, templates are also 
                 filtered by the release date of the target'''
+    )
+    parser.add_argument(
+        "--train_feats_dir", type=str, default=None,
+        help="Directory containing training feature files in pkl"
+    )
+    parser.add_argument(
+        "--train_DEER_dir", type=str,
+        help="Directory containing training DEER data in csv"
     )
     parser.add_argument(
         "--distillation_data_dir", type=str, default=None,
@@ -411,7 +435,7 @@ if __name__ == "__main__":
         help="Directory containing validation mmCIF files"
     )
     parser.add_argument(
-        "--val_feats_dir", type=str,
+        "--val_feats_dir", type=str, default=None,
         help="Directory containing validation feature files in pkl"
     )
     parser.add_argument(

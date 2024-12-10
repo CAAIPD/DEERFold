@@ -187,13 +187,13 @@ class OpenFoldSingleDataset(torch.utils.data.Dataset):
 
         self.reverse_mapping = { v:k for k,v in self.mapping.items() }
 
-        if self.sp_dir is None:
-            self.sps = {}
-        else:
-            self.sps = {
-                self.reverse_mapping[os.path.splitext(name)[0][:6]] : torch.from_numpy(next(iter(np.load(self.sp_dir + '/' + name).values())))
-                for name in os.listdir(self.sp_dir) if os.path.splitext(name)[0][:6] in self.reverse_mapping
-            }
+        # if self.sp_dir is None:
+        #     self.sps = {}
+        # else:
+        #     self.sps = {
+        #         self.reverse_mapping[os.path.splitext(name)[0][:6]] : torch.from_numpy(next(iter(np.load(self.sp_dir + '/' + name).values())))
+        #         for name in os.listdir(self.sp_dir) if os.path.splitext(name)[0][:6] in self.reverse_mapping
+        #     }
 
         if(template_release_dates_cache_path is None):
             logging.warning(
@@ -279,21 +279,22 @@ class OpenFoldSingleDataset(torch.utils.data.Dataset):
                     fasta_path=path,
                     alignment_dir=alignment_dir,
                 )
-        else:
-            data = pickle.load(open('%s/%s.pkl' % (self.feature_dir, name),'rb'))
-            if self.mode == 'train':
-                msa = data['msa']
-                neff = np.random.randint(1,25)
-                msa_indices = subsample_msa_sequentially(msa, neff=neff)
-                data['msa'] = data['msa'][msa_indices]
-                data['deletion_matrix_int'] = data['deletion_matrix_int'][msa_indices]
+        # else:
+            # data = pickle.load(open('%s/%s.pkl' % (self.feature_dir, name),'rb'))
+    
+        if self.mode == 'train':
+            msa = data['msa']
+            neff = np.random.randint(1,25)
+            msa_indices = subsample_msa_sequentially(msa, neff=neff)
+            data['msa'] = data['msa'][msa_indices]
+            data['deletion_matrix_int'] = data['deletion_matrix_int'][msa_indices]
 
-            # seq = np.array(list(data['sequence'][0].decode("utf-8")))
-            seq_length = data['seq_length'][0]
-            sp = process_csv('%s/%s.csv' % (self.sp_dir, name), seq_length)
-            data['sp'] = sp
-            del sp
-            gc.collect()      
+        # seq = np.array(list(data['sequence'][0].decode("utf-8")))
+        seq_length = data['seq_length'][0]
+        sp = process_csv('%s/%s.csv' % (self.sp_dir, name), seq_length)
+        data['sp'] = sp
+        del sp
+        gc.collect()      
               
         if(self._output_raw):
             return data
@@ -478,7 +479,12 @@ class OpenFoldDataModule(pl.LightningDataModule):
         predict_data_dir: Optional[str] = None,
         predict_alignment_dir: Optional[str] = None,
         kalign_binary_path: str = '/usr/bin/kalign',
+        train_feats_dir: Optional[str] = None,
+        val_feats_dir: Optional[str] = None,
+        train_DEER_dir: Optional[str] = None,
+        val_DEER_dir: Optional[str] = None,
         train_mapping_path: Optional[str] = None,
+        val_mapping_path: Optional[str] = None,
         distillation_mapping_path: Optional[str] = None,
         obsolete_pdbs_file_path: Optional[str] = None,
         template_release_dates_cache_path: Optional[str] = None,
@@ -500,6 +506,11 @@ class OpenFoldDataModule(pl.LightningDataModule):
         self.predict_alignment_dir = predict_alignment_dir
         self.kalign_binary_path = kalign_binary_path
         self.train_mapping_path = train_mapping_path
+        self.val_mapping_path = val_mapping_path
+        self.train_feats_dir = train_feats_dir
+        self.val_feats_dir = val_feats_dir
+        self.train_DEER_dir = train_DEER_dir
+        self.val_DEER_dir = val_DEER_dir
         self.distillation_mapping_path = distillation_mapping_path
         self.template_release_dates_cache_path = (
             template_release_dates_cache_path
@@ -540,9 +551,9 @@ class OpenFoldDataModule(pl.LightningDataModule):
             config=self.config,
             kalign_binary_path=self.kalign_binary_path,
             template_release_dates_cache_path=
-                self.template_release_dates_cache_path,
+            self.template_release_dates_cache_path,
             obsolete_pdbs_file_path=
-                self.obsolete_pdbs_file_path,
+            self.obsolete_pdbs_file_path,
         )
 
         if(self.training_mode):        
@@ -586,7 +597,7 @@ class OpenFoldDataModule(pl.LightningDataModule):
                     alignment_dir=self.val_alignment_dir,
                     mapping_path=self.val_mapping_path,
                     feature_dir=self.val_feats_dir, #'/data/mchaourab/wut18/pdb_train/train2/val/feats'
-                    sp_dir=self.val_DEER_dir #'/data/mchaourab/wut18/pdb_train/train2/sl/',
+                    sp_dir=self.val_DEER_dir, #'/data/mchaourab/wut18/pdb_train/train2/sl/',
                     max_template_hits=self.config.eval.max_template_hits,
                     mode="eval",
                     _output_raw=True,

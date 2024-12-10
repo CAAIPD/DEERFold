@@ -142,30 +142,31 @@ def main(args):
             os.rename(temp_name, final_name)
     
     print("\n")
-    for ref_pdb in args.ref_pdbs.split(','):
-        results2 = {}
-        tms = {}
-        for i in range(args.num_models):
-            if not os.path.exists(f"{args.outdir}/{pdbid}_model_{i + 1}.pdb"):
-                continue
-            rmsd = get_rmsd(f"{args.outdir}/{pdbid}_model_{i + 1}.pdb", f"{ref_pdb}")
-            results2[f"{pdbid}_model_{i + 1}.pdb"] = rmsd
-            tmscore = get_tmscore(f"{args.outdir}/{pdbid}_model_{i + 1}.pdb", f"{ref_pdb}")
-            tms[f"{pdbid}_model_{i + 1}.pdb"] = tmscore
+    if args.ref_pdbs:
+        for ref_pdb in args.ref_pdbs.split(','):
+            results2 = {}
+            tms = {}
+            for i in range(args.num_models):
+                if not os.path.exists(f"{args.outdir}/{pdbid}_model_{i + 1}.pdb"):
+                    continue
+                rmsd = get_rmsd(f"{args.outdir}/{pdbid}_model_{i + 1}.pdb", f"{ref_pdb}")
+                results2[f"{pdbid}_model_{i + 1}.pdb"] = rmsd
+                tmscore = get_tmscore(f"{args.outdir}/{pdbid}_model_{i + 1}.pdb", f"{ref_pdb}")
+                tms[f"{pdbid}_model_{i + 1}.pdb"] = tmscore
 
-        mean_value = sum(results2.values()) / len(results2)
-        min_value = min(results2.values())
-        min_key = [key for key, value in results2.items() if value == min_value]
-        print(f"Average RMSD between prediction and {ref_pdb}: {mean_value}")
-        print(f"Best RMSD between prediction({min_key}) and {ref_pdb}: {min_value}")
-        print(results2, "\n")
-        
-        mean_value = sum(tms.values()) / len(tms)
-        max_value = max(tms.values())
-        max_key = [key for key, value in tms.items() if value == max_value]
-        print(f"Average TMscore between prediction and {ref_pdb}: {mean_value}")
-        print(f"Best TMscore between prediction({max_key}) and {ref_pdb}: {max_value}")
-        print(tms, "\n")
+            mean_value = sum(results2.values()) / len(results2)
+            min_value = min(results2.values())
+            min_key = [key for key, value in results2.items() if value == min_value]
+            print(f"Average RMSD between prediction and {ref_pdb}: {mean_value}")
+            print(f"Best RMSD between prediction({min_key}) and {ref_pdb}: {min_value}")
+            print(results2, "\n")
+            
+            mean_value = sum(tms.values()) / len(tms)
+            max_value = max(tms.values())
+            max_key = [key for key, value in tms.items() if value == max_value]
+            print(f"Average TMscore between prediction and {ref_pdb}: {mean_value}")
+            print(f"Best TMscore between prediction({max_key}) and {ref_pdb}: {max_value}")
+            print(tms, "\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="DEERFold processing script")
@@ -186,11 +187,11 @@ if __name__ == "__main__":
         help="Path to the spin label CSV file"
     )
     parser.add_argument(
-        "--neff", type=float, default=5.0,
+        "--neff", type=float,
         help="Neff value for MSA subsampling"
     )
     parser.add_argument(
-        "--models", type=str, default="models/DEERFold_helix.pt,models/DEERFold_strand.pt,models/DEERFold_com.pt",
+        "--models", type=str, default="model/DEERFold.pt",
         help="Model weights (default: path/to/default/model.pth)"
     )
     parser.add_argument(

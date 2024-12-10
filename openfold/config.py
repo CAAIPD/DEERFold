@@ -201,16 +201,16 @@ config = mlc.ConfigDict(
             },
             "eval": {
                 "fixed_size": True,
-                "subsample_templates": False,  # We want top templates.
+                "subsample_templates": True,  # We want top templates.
                 "masked_msa_replace_fraction": 0.15,
                 "max_msa_clusters": 128,
                 "max_template_hits": 4,
                 "max_templates": 4,
-                "crop": False,
-                "crop_size": None,
+                "crop": True,
+                "crop_size": 256,
                 "supervised": True,
-                "subsample_recycling": False,
-                "uniform_recycling": False,
+                "subsample_recycling": True,
+                "uniform_recycling": True,
             },
             "train": {
                 "fixed_size": True,
