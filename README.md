@@ -37,7 +37,7 @@ We provide a notebook with installation guidance that can be found in <mark>[exa
 ### **Available DEERFold models**
 * ``` DEERFold.pt: DEERFold model trained on exposed sites in both helical and beta strand regions  ```
 
-Model weights can be downloaded [here](https://zenodo.org/records/14032036).
+Model weights can be downloaded [here](https://zenodo.org/records/14032036) as DEERFold.tar.gz.
 
 ## Inference
 ### Unconstrained prediction
