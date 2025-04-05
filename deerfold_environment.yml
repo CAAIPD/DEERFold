@@ -1,4 +1,4 @@
-name: alphalink_venv
+name: deerfold_venv
 channels:
   - conda-forge
   - bioconda
@@ -30,5 +30,7 @@ dependencies:
   - bioconda::hhsuite==3.3.0
   - bioconda::kalign2==2.04
   - matplotlib==3.5.3
-
-  
+  - cudatoolkit=11.3.1
+  - pytorch::pytorch=1.12.1
+  - pytorch::torchaudio=0.12.1
+  - pytorch::torchvision=0.13.1

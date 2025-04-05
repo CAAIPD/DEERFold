@@ -1,22 +1,34 @@
 #!/bin/bash
 # install_deerfold.sh
 
-# Install Mamba
-wget "https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-$(uname)-$(uname -m).sh" -O mamba_installer.sh
-bash mamba_installer.sh -b -p $HOME/mambaforge
-rm mamba_installer.sh
-source $HOME/mambaforge/etc/profile.d/conda.sh
+# Check if Miniforge3 is already installed
+if [ -d "$HOME/miniforge3" ]; then
+    echo "Miniforge3 already installed at $HOME/miniforge3. Skipping installation."
+else
+    # Download and install Miniforge3
+    echo "Downloading Miniforge3 installer..."
+    wget "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh" -O miniforge_installer.sh
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to download Miniforge3 installer. Check your internet connection or the URL."
+        exit 1
+    fi
+    bash miniforge_installer.sh -b -p "$HOME/miniforge3"
+    rm miniforge_installer.sh
+fi
 
-# Clone DEERFold
-git clone https://github.com/CAAIPD/DEERFold.git
-cd DEERFold
+# Source the conda setup script
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
 
 # Create and activate environment
+echo "Creating Deerfold environment..."
 mamba env create -f deerfold_environment.yml -p ./env/deerfold_venv
-mamba activate ./env/deerfold_venv
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to create environment. Check deerfold_environment.yml."
+    exit 1
+fi
 
-# Install PyTorch with CUDA support (adjust based on system)
-pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
+# Activate the environment
+conda activate ./env/deerfold_venv
 
 # Install MDAnalysis and chiLife
 pip install setuptools==60.3.0 gsd==2.4.2 mdanalysis==2.0.0
@@ -25,4 +37,4 @@ cd chiLife
 pip install -e .
 cd ..
 
-echo "Installation complete! Activate the environment with: mamba activate ./env/deerfold_venv"
+echo "Installation complete! Activate the environment with: conda activate ./env/deerfold_venv"
