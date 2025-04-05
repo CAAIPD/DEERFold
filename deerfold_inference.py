@@ -14,25 +14,64 @@ from deerfold_processor import run_deerfold
 def cdf(arr):
     return np.cumsum(arr) / np.sum(arr)
 
-def calculate_emd(pdb_file_1, input_csv, pairs):
-    emd = []
-    sigma = 2
-    r = np.linspace(1, 100, 100)
-    mdaload1 = MDAnalysis.Universe(pdb_file_1)
-    for i, j in pairs:
-        P = xl.distance_distribution(xl.SpinLabel.from_mmm('R1M', site=i, chain='A', protein=mdaload1), xl.SpinLabel.from_mmm('R1M', site=j, chain='A', protein=mdaload1), r=r)
-        a = np.argmax(P)
-        maxValue = r[a]
-        gauss = 1/np.sqrt(2*np.pi*sigma**2)*np.exp(-(r-maxValue)**2/(2*sigma**2))
-        dist1 = gauss/np.sum(gauss)
-        peak_index = np.argmax(dist1)
-        left_index = max(0, peak_index - 8)
-        right_index = min(len(dist1) - 1, peak_index + 8)
-        dist1 = dist1[left_index:right_index + 1]
+def calculate_emd(pdb_file_1, input_csv, pairs, nan_penalty_factor=1, plddt_penalty_factor=0.5):
+    """
+    Calculate a score based on Earth Mover's Distance (EMD), incorporating an average pLDDT score
+    and a penalty for NaN values.
 
+    Parameters:
+    - pdb_file_1: str, path to the PDB file
+    - input_csv: dict or DataFrame, contains experimental distance distributions
+    - pairs: list of tuples, pairs of sites to compare (e.g., [(1, 2), (3, 4)])
+    - nan_penalty_factor: float, penalty weight for NaN values (default: 0.1)
+    - plddt_penalty_factor: float, penalty weight for pLDDT (default: 0.1)
+
+    Returns:
+    - score: float, combined score (EMD + NaN penalty + pLDDT penalty)
+    """
+    # Load the PDB file
+    mdaload1 = MDAnalysis.Universe(pdb_file_1)
+    atoms = mdaload1.select_atoms("chainID A")
+    resids = np.unique(atoms.resids)
+
+    # Calculate pLDDT for each residue and compute the average
+    pLDDT_dict = {}
+    for resid in resids:
+        residue_atoms = mdaload1.select_atoms(f"chainID A and resid {resid}")
+        pLDDT = np.mean(residue_atoms.tempfactors)
+        pLDDT_dict[resid] = pLDDT
+    # average_plddt = np.mean([pLDDT_dict[resid] for resid in resids])
+
+    # Define distance range
+    r = np.linspace(1, 100, 100)
+    emd_values = []
+    total_pairs = len(pairs)
+
+    # Calculate EMD for each pair
+    for i, j in pairs:
+        # Compute predicted distance distribution
+        P = xl.distance_distribution(
+            xl.SpinLabel.from_mmm('R1M', site=i, chain='A', protein=mdaload1),
+            xl.SpinLabel.from_mmm('R1M', site=j, chain='A', protein=mdaload1),
+            r=r
+        )
         dist2 = input_csv[(i, j)]
-        emd.append(wasserstein_distance(cdf(np.asarray(P)), cdf(dist2)))
-    return np.mean(emd)
+        # Note: Assumes cdf is a defined function to compute cumulative distribution function
+        # If P and dist2 are already normalized, use wasserstein_distance(P, dist2) directly
+        emd_value = wasserstein_distance(cdf(np.asarray(P)), cdf(dist2))
+
+        if not np.isnan(emd_value):
+            emd_values.append(emd_value)
+
+    # Compute the final score
+    if emd_values:
+        mean_emd = np.mean(emd_values)
+        nan_ratio = (total_pairs - len(emd_values)) / total_pairs
+        score = mean_emd + nan_ratio * nan_penalty_factor
+    else:
+        score = float('inf')
+
+    return score
 
 def get_rmsd(pdb1, pdb2, tmscore_path="./TMscore"):
     result = subprocess.run([tmscore_path, pdb1, pdb2], stdout=subprocess.PIPE)

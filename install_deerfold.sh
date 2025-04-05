@@ -32,9 +32,11 @@ conda activate ./env/deerfold_venv
 
 # Install MDAnalysis and chiLife
 pip install setuptools==60.3.0 gsd==2.4.2 mdanalysis==2.0.0
-git clone https://github.com/StollLab/chiLife.git
-cd chiLife
-pip install -e .
-cd ..
+pip install chilife==1.0.2
+pip install numpy==1.22.4
+
+# Install TMscore
+wget https://zhanggroup.org/TM-score/TMscoreLinux.zip
+unzip TMscoreLinux.zip
 
 echo "Installation complete! Activate the environment with: conda activate ./env/deerfold_venv"
