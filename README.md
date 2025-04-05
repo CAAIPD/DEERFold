@@ -37,7 +37,7 @@ DEERFold is described in this [preprint](https://doi.org/10.1101/2024.10.30.6211
 git clone https://github.com/CAAIPD/DEERFold.git
 cd DEERFold
 
-2. Install DEERFold
+2. Install DEERFold (The installation takes ~20 mins).
 bash install_deerfold.sh
 
 3. Activate the environment with: 
