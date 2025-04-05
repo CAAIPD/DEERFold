@@ -38,5 +38,6 @@ pip install numpy==1.22.4 --force-reinstall 2>/dev/null
 # Install TMscore
 wget https://zhanggroup.org/TM-score/TMscoreLinux.zip
 unzip TMscoreLinux.zip
+rm TMscoreLinux.zip
 
 echo "Installation complete! Activate the environment with: conda activate ./env/deerfold_venv"
