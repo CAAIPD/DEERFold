@@ -43,7 +43,6 @@ bash install_deerfold.sh
 3. Activate the environment with: 
 conda activate ./env/deerfold_venv
 ```
-We also provide a notebook with installation guidance that can be found in <mark>[examples/deerfold.ipynb](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb)</mark>. It also includes examples on how to generate predictions using our models. We recommend following this notebook if you would like to use our models to generate proteins.
 
 ### **Available DEERFold models**
 * ``` DEERFold.pt: DEERFold model trained on exposed sites in both helical and beta strand regions  ```
@@ -56,6 +55,7 @@ We also provide a notebook with installation guidance that can be found in <mark
 ```
 
 ## Inference
+We also provide a notebook that can be found in [examples/deerfold.ipynb](https://github.com/CAAIPD/DEERFold/tree/main/examples/deerfold.ipynb). It includes examples on how to generate predictions using our models. We recommend following this notebook if you would like to use our models to generate proteins.
 ### Unconstrained prediction
 
 For comparison DEERFold can accept empty csv file to genreate unconstrained models. 
@@ -63,10 +63,10 @@ For comparison DEERFold can accept empty csv file to genreate unconstrained mode
 To unconditionally generate models from DEERFold, run the following script:
 
 ``` 
-python deerfold_inference.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --neff neff --num num
+python deerfold_inference.py <fasta_file> <out_dir> --model <model_weights_dir> --msa_dir <msa_dir> --neff neff --num num
 
 E.g. Generate 15 unconstrained DEERFold models, set MSA Neff as 5
-python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_unconstrained --models model/DEERFold.pt --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta out/PfMATE_unconstrained --models model/DEERFold.pt --msa_dir examples/msa --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
 ```
 Options are as follows:
 - `fasta_file`: Input sequence file in FASTA format.
@@ -90,7 +90,7 @@ The input distance constraints are in the format of distograms (shape LxLx100, e
 
 To run inference on a sequence with the given DEER constraints, run the following script:
 ```
-python deerfold_inference.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --splabel <csv_file> --neff neff --num num --ref_pdbs <ref1.pdb,ref2.pdb>
+python deerfold_inference.py <fasta_file> <out_dir> --model <model_weights_dir> --splabel <csv_file> --msa_dir <msa_dir> --neff neff --num num --ref_pdbs <ref1.pdb,ref2.pdb>
 
 Options are:
 - `fasta`: Input sequence file in FASTA format.
@@ -104,11 +104,11 @@ Options are:
 ```
 * E.g. Generate 15 constrained models from DEERFold_helix based on the input DEER constraints(**--splabel** examples/PfMATE/experiment.csv), set MSA Neff as 5
 ```
-python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_constrained --models model/DEERFold.pt --splabel examples/PfMATE/experiment.csv --neff 5 --num 15
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_constrained --models model/DEERFold.pt --splabel examples/PfMATE/experiment.csv --msa_dir examples/msa --neff 5 --num 15
 ```
 * E.g. If you have the reference models available, DEERFold provides RMSD and TM-score analysis of the prediction results compared to the reference PDB files(**--ref_pdbs**).
 ```
-python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_constrained --models model/DEERFold.pt --splabel examples/PfMATE/experiment.csv --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_constrained --models model/DEERFold.pt --splabel examples/PfMATE/experiment.csv --msa_dir examples/msa --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
 ```
 
 Outputs should be DEERFold predicted models in the format of PDB files, which are ranked by EMD distance between the prediction and the input distance constraints. **The top ranking models should be those most closely fitting the input distance constraints.**
