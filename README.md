@@ -66,7 +66,7 @@ To unconditionally generate models from DEERFold, run the following script:
 python deerfold_inference.py <fasta_file> <msa_dir> <out_dir> --model <model_weights_dir> --neff neff --num num
 
 E.g. Generate 15 unconstrained DEERFold models, set MSA Neff as 5
-python deerfold_inference.py examples/PfMATE.fasta examples/msa out/PfMATE_unconstrained --model model/DEERFold.pt --neff 5 --num 15
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_unconstrained --models model/DEERFold.pt --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
 ```
 Options are as follows:
 - `fasta_file`: Input sequence file in FASTA format.
@@ -104,11 +104,11 @@ Options are:
 ```
 * E.g. Generate 15 constrained models from DEERFold_helix based on the input DEER constraints(**--splabel** examples/PfMATE/experiment.csv), set MSA Neff as 5
 ```
-python deerfold_inference.py examples/PfMATE/PfMATE_A.fasta examples/alignments out/PfMATE_constrained --splabel examples/PfMATE/experiment.csv --neff 5 --num 15
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_constrained --models model/DEERFold.pt --splabel examples/PfMATE/experiment.csv --neff 5 --num 15
 ```
 * E.g. If you have the reference models available, DEERFold provides RMSD and TM-score analysis of the prediction results compared to the reference PDB files(**--ref_pdbs**).
 ```
-python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_constrained --splabel examples/PfMATE/experiment.csv --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
+python deerfold_inference.py examples/PfMATE/PfMATE.fasta examples/msa out/PfMATE_constrained --models model/DEERFold.pt --splabel examples/PfMATE/experiment.csv --neff 5 --num 15 --ref_pdbs examples/PfMATE/6gwh.pdb,examples/PfMATE/6fhz.pdb
 ```
 
 Outputs should be DEERFold predicted models in the format of PDB files, which are ranked by EMD distance between the prediction and the input distance constraints. **The top ranking models should be those most closely fitting the input distance constraints.**

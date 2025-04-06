@@ -1,9 +1,24 @@
 name: deerfold_venv
 channels:
+  - pytorch  # Prioritize pytorch channel for PyTorch and CUDA compatibility
+  - nvidia
   - conda-forge
   - bioconda
-  - pytorch
 dependencies:
+  - python=3.9
+  - setuptools=59.5.0
+  - pip
+  - openmm=7.5.1
+  - pdbfixer
+  - aria2
+  - hmmer=3.3.2
+  - hhsuite=3.3.0
+  - kalign2=2.04
+  - matplotlib=3.5.3
+  - pytorch=1.13.0 
+  - torchaudio=0.13.0
+  - torchvision=0.14.0
+  - pytorch-cuda=11.7
   - pip:
       - pandas==1.3.5
       - biopython==1.79
@@ -19,18 +34,3 @@ dependencies:
       - pytorch_lightning==1.5.0
       - wandb==0.12.21
       - git+https://github.com/NVIDIA/dllogger.git
-  - conda-forge::python=3.9
-  - conda-forge::setuptools=59.5.0
-  - conda-forge::pip
-  - conda-forge::openmm=7.5.1
-  - conda-forge::pdbfixer
-  - conda-forge::cudatoolkit==11.3.*
-  - bioconda::aria2
-  - bioconda::hmmer==3.3.2
-  - bioconda::hhsuite==3.3.0
-  - bioconda::kalign2==2.04
-  - matplotlib==3.5.3
-  - cudatoolkit=11.3.1
-  - pytorch::pytorch=1.12.1
-  - pytorch::torchaudio=0.12.1
-  - pytorch::torchvision=0.13.1
