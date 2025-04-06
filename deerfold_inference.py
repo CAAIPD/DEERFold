@@ -10,60 +10,38 @@ import MDAnalysis
 import chilife as xl
 from scipy.stats import wasserstein_distance
 from deerfold_processor import run_deerfold
+from scripts.mmseqs_query_colabfold import run_mmseqs2, read_fasta_lists
 
 def cdf(arr):
     return np.cumsum(arr) / np.sum(arr)
 
 def calculate_emd(pdb_file_1, input_csv, pairs, nan_penalty_factor=1, plddt_penalty_factor=0.5):
-    """
-    Calculate a score based on Earth Mover's Distance (EMD), incorporating an average pLDDT score
-    and a penalty for NaN values.
-
-    Parameters:
-    - pdb_file_1: str, path to the PDB file
-    - input_csv: dict or DataFrame, contains experimental distance distributions
-    - pairs: list of tuples, pairs of sites to compare (e.g., [(1, 2), (3, 4)])
-    - nan_penalty_factor: float, penalty weight for NaN values (default: 0.1)
-    - plddt_penalty_factor: float, penalty weight for pLDDT (default: 0.1)
-
-    Returns:
-    - score: float, combined score (EMD + NaN penalty + pLDDT penalty)
-    """
-    # Load the PDB file
     mdaload1 = MDAnalysis.Universe(pdb_file_1)
     atoms = mdaload1.select_atoms("chainID A")
     resids = np.unique(atoms.resids)
 
-    # Calculate pLDDT for each residue and compute the average
     pLDDT_dict = {}
     for resid in resids:
         residue_atoms = mdaload1.select_atoms(f"chainID A and resid {resid}")
         pLDDT = np.mean(residue_atoms.tempfactors)
         pLDDT_dict[resid] = pLDDT
-    # average_plddt = np.mean([pLDDT_dict[resid] for resid in resids])
 
-    # Define distance range
     r = np.linspace(1, 100, 100)
     emd_values = []
     total_pairs = len(pairs)
 
-    # Calculate EMD for each pair
     for i, j in pairs:
-        # Compute predicted distance distribution
         P = xl.distance_distribution(
             xl.SpinLabel.from_mmm('R1M', site=i, chain='A', protein=mdaload1),
             xl.SpinLabel.from_mmm('R1M', site=j, chain='A', protein=mdaload1),
             r=r
         )
         dist2 = input_csv[(i, j)]
-        # Note: Assumes cdf is a defined function to compute cumulative distribution function
-        # If P and dist2 are already normalized, use wasserstein_distance(P, dist2) directly
         emd_value = wasserstein_distance(cdf(np.asarray(P)), cdf(dist2))
 
         if not np.isnan(emd_value):
             emd_values.append(emd_value)
 
-    # Compute the final score
     if emd_values:
         mean_emd = np.mean(emd_values)
         nan_ratio = (total_pairs - len(emd_values)) / total_pairs
@@ -92,23 +70,53 @@ def get_tmscore(pdb1, pdb2, tmscore_path="./TMscore"):
     return None
 
 def create_empty_csv(file_path):
-    # Ensure the directory exists
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    
-    # Create an empty CSV file
     with open(file_path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
     print(f"Empty CSV file created at: {file_path}")
 
+def generate_msa(fasta_path, outdir):
+    fasta_fname = os.path.basename(fasta_path).split('.')[0]
+    tmp_path = f"{outdir}_tmp_{fasta_fname}/"
+    if not os.path.exists(tmp_path):
+        os.makedirs(tmp_path)
+    names, seqs = read_fasta_lists(fasta_path)
+    msas = run_mmseqs2(seqs, prefix=tmp_path, user_agent="DEERFold/1.0")
+    for name, msa in zip(names, msas):
+        os.makedirs(f"{outdir}/{name}/", exist_ok=True)
+        with open(f"{outdir}/{name}/{name}.a3m", "w") as f:
+            f.write(msa)
+    os.system(f"rm -r {tmp_path}")
+    return outdir
+
+def check_msa_exists(fasta_path, outdir):
+    """Check if MSA files already exist in outdir based on FASTA headers."""
+    names, _ = read_fasta_lists(fasta_path)
+    for name in names:
+        msa_file = f"{outdir}/{name}/{name}.a3m"
+        if not os.path.exists(msa_file):
+            return False
+        print(f"MSA exists in: {outdir}/{name}/{name}.a3m")
+    return True
 
 def main(args):
     if not os.path.exists(args.outdir):
         os.makedirs(args.outdir)
 
+    # Handle MSA generation or use provided MSA directory
+    if args.msa_dir and os.path.exists(args.msa_dir):
+        print(f"Using precomputed MSA from: {args.msa_dir}")
+    elif check_msa_exists(args.fasta, args.outdir):
+        print(f"Using existing MSA in: {args.outdir}")
+        args.msa_dir = args.outdir
+    else:
+        print("No MSA directory provided or found. Generating MSA...")
+        args.msa_dir = generate_msa(args.fasta, args.outdir)
+
     model_files = args.models.split(',')
     pdbid, _ = os.path.splitext(os.path.basename(args.fasta))
-    num_per_model = args.num_models // len(model_files)  # Divide equally among 3 models
-    remainder = args.num_models % len(model_files)  # Handle any remainder
+    num_per_model = args.num_models // len(model_files)
+    remainder = args.num_models % len(model_files)
 
     pairs = []
     input_csv = {}
@@ -142,7 +150,6 @@ def main(args):
                     output_dir=f"{args.outdir}/{pdbid}",
                     checkpoint_path=model_file,
                     neff=args.neff,
-                    # neff=None,
                     distograms=True,
                     model_device=args.model_device,
                     features=args.features,
@@ -166,7 +173,6 @@ def main(args):
 
         sorted_result = sorted(results2.items(), key=lambda x: x[1])
         top_n = sorted_result[:args.num_models]
-        # print(top_n)
 
         rename_operations = []
         for i, (old_name, _) in enumerate(top_n, start=1):
@@ -209,51 +215,17 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="DEERFold processing script")
-    parser.add_argument(
-        "fasta", type=str,
-        help="Path to FASTA file, one sequence per file"
-    )
-    parser.add_argument(
-        "msa_dir", type=str,
-        help="Directory containing precomputed MSA"
-    )
-    parser.add_argument(
-        "outdir", type=str,
-        help="Output directory for results"
-    )
-    parser.add_argument(
-        "--splabel", type=str,
-        help="Path to the spin label CSV file"
-    )
-    parser.add_argument(
-        "--neff", type=float,
-        help="Neff value for MSA subsampling"
-    )
-    parser.add_argument(
-        "--models", type=str, default="model/DEERFold.pt",
-        help="Model weights (default: path/to/default/model.pth)"
-    )
-    parser.add_argument(
-        "--save_outputs", action="store_true", default=True,
-        help="Whether to save all model outputs, including embeddings, etc."
-    )
-    parser.add_argument(
-        "--features", type=str,
-        help="Feature pickle"
-    )
-    parser.add_argument(
-        "--model_device", type=str, default="cuda:0",
-        help="""Name of the device on which to run the model. Any valid torch
-             device name is accepted (e.g. "cpu", "cuda:0")"""
-    )
-    parser.add_argument(
-        "--ref_pdbs", type=str,
-        help="Comma-separated list of reference PDB files"
-    )
-    parser.add_argument(
-        "--num_models", type=int, default=15,
-        help="Total number of models to generate (default: 15)"
-    )
+    parser.add_argument("fasta", type=str, help="Path to FASTA file, one sequence per file")
+    parser.add_argument("outdir", type=str, help="Output directory for results")
+    parser.add_argument("--splabel", type=str, help="Path to the spin label CSV file")
+    parser.add_argument("--msa_dir", type=str, help="Directory containing precomputed MSA (optional)")
+    parser.add_argument("--neff", type=float, help="Neff value for MSA subsampling")
+    parser.add_argument("--models", type=str, default="model/DEERFold.pt", help="Model weights")
+    parser.add_argument("--save_outputs", action="store_true", default=True, help="Whether to save all model outputs")
+    parser.add_argument("--features", type=str, help="Feature pickle")
+    parser.add_argument("--model_device", type=str, default="cuda:0", help="Device for model (e.g., 'cpu', 'cuda:0')")
+    parser.add_argument("--ref_pdbs", type=str, help="Comma-separated list of reference PDB files")
+    parser.add_argument("--num_models", type=int, default=15, help="Total number of models to generate")
 
     args = parser.parse_args()
     main(args)
