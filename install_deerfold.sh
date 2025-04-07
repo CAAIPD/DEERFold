@@ -18,6 +18,7 @@ fi
 
 # Source the conda setup script
 source "$HOME/miniforge3/etc/profile.d/conda.sh"
+export PATH="$HOME/miniforge3/bin:$PATH"
 
 # Create and activate environment
 echo "Creating Deerfold environment..."
