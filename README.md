@@ -1,4 +1,5 @@
 # DEERFold
+<span style="color:red">**Disclaimer:** The performance of DEERFold requires high-quality DEER data. The authors are not responsible for erroneous models resulting from compromised DEER data quality.</span>
 
 ### Description
 In this work, we introduce DEERFold, a modified AlphaFold2 framework that incorporates distance  distributions from Double Electron-Electron Resonance (DEER) spectroscopy into protein structure prediction. DEERFold generates accurate and diverse protein conformations guided by experimental and simulated distance distributions, outperforming base AlphaFold2 for proteins with limited homologs to generate multiple conformational states. Critically, DEERFold reduces the number of required experimental constraints, increasing throughput and expanding capabilities beyond DEER to other probe-based methods. We envision DEERFold will advance protein structure prediction by bridging the gap between experimental data and deep learning techniques, enabling more accurate and efficient conformational modeling.
