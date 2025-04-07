@@ -42,7 +42,8 @@ cd DEERFold
 2. Install DEERFold (The installation takes ~20 mins).
 bash install_deerfold.sh
 
-3. Activate the environment with: 
+3. Activate the environment with:
+export PATH="$(pwd)/env/deerfold_venv/bin:$PATH"
 conda activate ./env/deerfold_venv
 ```
 
