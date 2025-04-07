@@ -52,7 +52,8 @@ conda activate ./env/deerfold_venv
 
 ```
 1. cd DEERFold
-2. Download DEERFold.tar.gz from [here](https://zenodo.org/records/14032036) .
+2. Download DEERFold.tar.gz from [here](https://zenodo.org/records/14032036).
+wget -O DEERFold.tar.gz "https://zenodo.org/records/15147304/files/DEERFold.tar.gz?download=1"
 3. tar xvzf DEERFold.tar.gz
 4. Model weights can be found in model/DEERFold.pt
 ```
