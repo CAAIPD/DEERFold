@@ -43,7 +43,7 @@ cd DEERFold
 bash install_deerfold.sh
 
 3. Activate the environment with:
-export PATH="$(pwd)/env/deerfold_venv/bin:$PATH"
+export PATH="$HOME/miniforge3/bin:$PATH"
 conda activate ./env/deerfold_venv
 ```
 
