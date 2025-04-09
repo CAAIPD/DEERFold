@@ -30,6 +30,7 @@ fi
 
 # Activate the environment
 conda activate ./env/deerfold_venv
+export PATH="$PWD/env/deerfold_venv/bin:$PATH"
 
 # Install MDAnalysis and chiLife
 pip install setuptools==60.3.0 gsd==2.4.2 mdanalysis==2.0.0
