@@ -1,4 +1,4 @@
-Model Card for DEERFold
+# Model Card for DEERFold
 
 DEERFold is a modified AlphaFold2 framework that integrates distance distributions from Double Electron-Electron Resonance (DEER) spectroscopy into protein structure prediction. It generates accurate and diverse protein conformations guided by experimental and simulated DEER data, outperforming base AlphaFold2 for proteins with limited homologs by producing multiple conformational states with fewer experimental constraints.
 
